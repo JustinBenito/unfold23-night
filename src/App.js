@@ -677,7 +677,6 @@ function App() {
 	// const from="0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054";
 	// const to="0xb452b513552aa0B57c4b1C9372eFEa78024e5936";
 
-
 	const handleUserMessageChange = (e) => {
 		setUserMessage(e.target.value);
 	  };
@@ -690,15 +689,11 @@ function App() {
 		  ];
 	
 		  setChatMessage(message1);
-		  console.log(chatmessage)
 		}
-
-	
-		  
 	  };
-
-
+	
 	  useEffect(() => {
+		console.log(chatmessage)
 		if (chatmessage.length > 0) {
 		  setLoading(true);
 		  fetch_data()
@@ -713,9 +708,8 @@ function App() {
 			});
 		}
 	  }, [chatmessage]);
-
+	
 	  const fetch_data = async () => {
-		console.log("im in")
 		try {
 		  const response = await openai.chat.completions.create({
 			model: 'gpt-3.5-turbo-0613',
@@ -724,67 +718,38 @@ function App() {
 			function_call: 'auto',
 		  });
 	
-		  console.log(response)
-		  setLoading(false)
+		  setLoading(false);
 		  return response;
 		} catch (error) {
 		  console.error(error);
 		  throw error;
 		}
 	  };
-
-
-	  useEffect(()=>{
-
-		if(response!=null){
-		const finalresp = JSON.parse(response.choices[0].message.function_call.arguments)
-
-		  const amount = finalresp.amount*Math.pow(10,12)
-		  // Assuming you have defined the 'chains' and 'tokens' objects elsewhere in your code.
-		  const sourcechainname=finalresp.sourcechain
-		  const destinationchainname=finalresp.destinationchain
-
-		  const sourcechain = chains[finalresp.sourcechain];
-
-		  console.log(sourcechain)
-		  const destinationchain = chains[finalresp.destinationchain];
-		  console.log(destinationchain)
+	
+	  useEffect(() => {
+		if (response !== null) {
+		  const finalresp = JSON.parse(response.choices[0].message.function_call.arguments);
+		  const amount = finalresp.amount * Math.pow(10, 12);
+		  const sourcechainname = finalresp.sourcechain;
+		  const destinationchainname = finalresp.destinationchain;
+		  const sourcechain = chains[sourcechainname];
+		  const destinationchain = chains[destinationchainname];
 		  const stoken = finalresp.sourcetoken || 'ETH';
 		  const dtoken = finalresp.destinationtoken || 'ETH';
-		  
-		//   const sourcetoken = tokens[sourcechain];
-		//   console.log("stoken",sourcetoken)
-		//   const destinationtoken = tokens[destinationchain];
-		//   console.log("dtoken", destinationtoken)
-		
-		console.log(sourcechainname)
-		console.log(destinationchainname)
-
-		console.log("sourchain name", sourcechainname)
-		console.log("destination chain name", destinationchainname)
-
-		console.log(tokens[sourcechainname][stoken])
-		console.log(tokens[destinationchainname][dtoken])
-
-		console.log("resp",finalresp)
-		console.log("sourcechain",sourcechain)
-		console.log("destinationchain", destinationchain)
-		setFromChain(sourcechain)
-		setToChain(destinationchain)
-		setFromToken(tokens[sourcechainname][stoken])
-		setToToken(tokens[destinationchainname][dtoken])
-		setAmount(amount)
-
-		// console.log("stoken",sourcetoken)
-		// console.log("dtoken", destinationtoken)
-	}
-	  }, [response])
-	 
-	const chains= {
-		"Avalanche Fuji": 43113,
-		"Polygon Mumbai": 80001,
-		"Ethereum Goerli": 5,
-	  }
+	
+		  setFromChain(sourcechain);
+		  setToChain(destinationchain);
+		  setFromToken(tokens[sourcechainname][stoken]);
+		  setToToken(tokens[destinationchainname][dtoken]);
+		  setAmount(amount);
+		}
+	  }, [response]);
+	
+	  const chains = {
+		'Avalanche Fuji': 43113,
+		'Polygon Mumbai': 80001,
+		'Ethereum Goerli': 5,
+	  };
 	
 	  const tokens = {
 		"Avalanche Fuji": {
@@ -866,137 +831,110 @@ function App() {
 	const [step2,setStep2]=useState('')
 	const [step3,setStep3]=useState('')
 	
-	const PATH_FINDER_API_URL = "https://api.pf.testnet.routerprotocol.com/api"
-	
-	
+	const PATH_FINDER_API_URL = 'https://api.pf.testnet.routerprotocol.com/api';
+
 	useEffect(() => {
-		async function fetchData() {
-		  const params = {
-			'fromTokenAddress': fromtoken,
-			'toTokenAddress': totoken,
-			'amount': amount,
-			'fromTokenChainId': fromchain,
-			'toTokenChainId': tochain,
-			'widgetId': 0,
-		  }
-		  console.log(params)
-		  const quoteData = await getQuote(params);
-		  setQuoteData(quoteData);
-		}
-		console.log("done quoteData")
-		fetchData();
-	  }, [fromchain, tochain, fromtoken, totoken, amount]);
-	  
-	  useEffect(() => {
-		async function handleEthereum() {
-		  if (window.ethereum) {
-			console.log('detected');
-			const provider = new ethers.providers.Web3Provider(window.ethereum);
-			const signer = provider.getSigner();
-			try {
-				console.log("doing allowance")
-			  const accounts = await window.ethereum.request({
-				method: "eth_requestAccounts",
-			  });
-			  console.log(accounts[0]);
-	  
-			  await checkAndSetAllowance(
-				signer,
-				fromtoken,
-				quoteData.allowanceTo,
-				ethers.constants.MaxUint256
-			  );
-			  console.log("done allowance")
-			  setStep2('✅');
-			} catch (err) {
-			  console.log(err);
-			} finally {
-				console.log("entering transaction")
-			  const txResponse = await getTransaction({
-				'fromTokenAddress': fromtoken,
-				'toTokenAddress': totoken,
-				'fromTokenChainId': fromchain,
-				'toTokenChainId': tochain,
-				'widgetId': 0,
-			  }, quoteData);
-			//   console.log("done tx",txResponse) ? txResponse!=null : console.log("wait tx")
-			  const tx = await signer.sendTransaction(txResponse.txn.execution);
-			  try {
-				await tx.wait();
-				console.log(`Transaction mined successfully: ${tx.hash}`);
-				alert(`Transaction mined successfully: ${tx.hash}`);
-				setStep3('✅');
-			  } catch (error) {
-				console.log(`Transaction failed with error: ${error}`);
-			  }
-			}
+	  async function fetchData() {
+		const params = {
+		  fromTokenAddress: fromtoken,
+		  toTokenAddress: totoken,
+		  amount: amount,
+		  fromTokenChainId: fromchain,
+		  toTokenChainId: tochain,
+		  widgetId: 0,
+		};
+  
+		const quoteData = await getQuote(params);
+		setQuoteData(quoteData);
+	  }
+  
+	  fetchData();
+	}, [fromchain, tochain, fromtoken, totoken, amount]);
+  
+	useEffect(() => {
+	  async function handleEthereum() {
+		if (window.ethereum) {
+		  try {
+			const accounts = await window.ethereum.request({
+			  method: 'eth_requestAccounts',
+			});
+  
+			setAccount(accounts[0]);
+  
+			// const provider1 = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/polygon_mumbai', 80001);
+			// const provider2 = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/avalanche_fuji', 43113);
+  
+			// const contract1 = new ethers.Contract(from, erc20_abi, provider1);
+			// let balance1 = await contract1.balanceOf(accounts[0]);
+			// setPolygonBalance(ethers.utils.formatUnits(balance1, 12));
+  
+			// const contract2 = new ethers.Contract(to, erc20_abi, provider2);
+			// let balance2 = await contract2.balanceOf(accounts[0]);
+			// setAvalancheBalance(ethers.utils.formatUnits(balance2, 12));
+		  } catch (err) {
+			console.error(err);
 		  }
 		}
-	  
-		handleEthereum();
-	  }, [quoteData]);
-	  
-	
+	  }
+  
+	  handleEthereum();
+	}, []);
+  
 	const getQuote = async (params) => {
-		const endpoint = "v2/quote"
-		const quoteUrl = `${PATH_FINDER_API_URL}/${endpoint}`
-	
-		console.log(quoteUrl)
-	
-		try {
-			const res = await axios.get(quoteUrl, { params })
-
-			return res.data;
-			
-		} catch (e) {
-			console.error(`Fetching quote data from pathfinder: ${e}`)
-		}    
-	}
+	  const endpoint = 'v2/quote';
+	  const quoteUrl = `${PATH_FINDER_API_URL}/${endpoint}`;
+  
+	  try {
+		const res = await axios.get(quoteUrl, { params });
+		return res.data;
+	  } catch (e) {
+		console.error(`Fetching quote data from pathfinder: ${e}`);
+	  }
+	};
+  
 	const checkAndSetAllowance = async (wallet, tokenAddress, approvalAddress, amount) => {
-		// Transactions with the native token don't need approval
-		if (tokenAddress === ethers.constants.AddressZero) {
-			return
-		}
-	
-		const erc20 = new ethers.Contract(tokenAddress, erc20_abi, wallet);
-		const allowance = await erc20.allowance(await wallet.getAddress(), approvalAddress);
-		if (allowance.lt(amount)) {
-			const approveTx = await erc20.approve(approvalAddress, amount, {gasPrice: await wallet.provider.getGasPrice()});
-			try {
-				await approveTx.wait();
-				console.log(`Transaction mined succesfully: ${approveTx.hash}`)
-			}
-			catch (error) {
-				console.log(`Transaction failed with error: ${error}`)
-			}
-		}
-		else{
-
-			console.log("enough allowance")
-			alert("enough allowance")
-		}
-	}
-	const getTransaction = async (params, quoteData) => {
-		const endpoint = "v2/transaction"
-		const txDataUrl = `${PATH_FINDER_API_URL}/${endpoint}`
-	
-		console.log(txDataUrl)
-	
+	  if (tokenAddress === ethers.constants.AddressZero) {
+		return;
+	  }
+  
+	  const erc20 = new ethers.Contract(tokenAddress, erc20_abi, wallet);
+	  const allowance = await erc20.allowance(await wallet.getAddress(), approvalAddress);
+  
+	  if (allowance.lt(amount)) {
+		const approveTx = await erc20.approve(approvalAddress, amount, { gasPrice: await wallet.provider.getGasPrice() });
+  
 		try {
-			const res = await axios.post(txDataUrl, {
-				...quoteData,
-				fromTokenAddress: params.fromTokenAddress,
-				toTokenAddress: params.toTokenAddress,
-				slippageTolerance: 0.5,
-				senderAddress: account,
-				receiverAddress: account,
-				widgetId: params.widgetId
-			})
-			return res.data;
-		} catch (e) {
-			console.error(`Fetching tx data from pathfinder: ${e}`)
-		}    
-	}
+		  await approveTx.wait();
+		  console.log(`Transaction mined successfully: ${approveTx.hash}`);
+		} catch (error) {
+		  console.error(`Transaction failed with error: ${error}`);
+		}
+	  } else {
+		console.log('Enough allowance');
+	  }
+	};
+  
+	const getTransaction = async (params, quoteData) => {
+	  const endpoint = 'v2/transaction';
+	  const txDataUrl = `${PATH_FINDER_API_URL}/${endpoint}`;
+  
+	  try {
+		const res = await axios.post(txDataUrl, {
+		  ...quoteData,
+		  fromTokenAddress: params.fromTokenAddress,
+		  toTokenAddress: params.toTokenAddress,
+		  slippageTolerance: 0.5,
+		  senderAddress: account,
+		  receiverAddress: account,
+		  widgetId: params.widgetId,
+		});
+  
+		return res.data;
+	  } catch (e) {
+		console.error(`Fetching tx data from pathfinder: ${e}`);
+	  }
+	};
+
   return (
 	<div>
 
@@ -1053,24 +991,24 @@ if(window.ethereum) {
 	}
   }
 
-		}}> {account.substring(0,4)+"...."+account.substring(38,42)}</button>
+		}}> {account}</button>
 		</div>
 		<br></br>
 		<br></br><br></br>
 		<h5>Transfer UDST from Polygon Mumbai to Avalanche Fuji</h5>
 		<br></br>
-		<div>Polygon: {polygonBalance}&nbsp;&nbsp;&nbsp;&nbsp;Avalanche: {avalancheBalance}</div>
+		
 		
 		
 		
 		<br></br>
-		<input placeholder='Enter Amount' onChange={(e)=>{setAmount(e.target.value*Math.pow(10,12))}}></input>
-		<h2>Steps</h2>
-		<br></br>
+		
+		{/* <h2>Steps</h2>
+		<br></br> */}
 {/* {amount} */}
 
 
-		<button  class="button-51" onClick={async ()=>{
+		{/* <button  class="button-51" onClick={async ()=>{
 			
 			const params ={
 				'fromTokenAddress': fromchain,
@@ -1110,7 +1048,7 @@ if(window.ethereum) {
     
    
     
-}}>Step 3: Execute {step3}</button>
+}}>Step 3: Execute {step3}</button> */}
 </center>
 
 <div style={{ padding: '1rem', }}>
