@@ -12,8 +12,8 @@ body {
 }
 
 .button-51 {
-  background: linear-gradient(to right, #c60202, #f80b0b); /* Fluorescent Green gradient */
-  border: 1px solid #da1a1a;
+  background: linear-gradient(to right,#EA3A0D,#ff4e02, #ff7654); /* Fluorescent Green gradient */
+  border: 1px solid #960921;
   box-sizing: border-box;
   color: #FFFFFF; /* White text color */
   font-family: "Avenir Next LT W01 Bold", sans-serif;
@@ -23,8 +23,8 @@ body {
   padding: 16px 23px; /* Light Green padding */
   position: relative;
   text-decoration: none;
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
   touch-action: manipulation;
   transition: background 0.3s ease; /* Smooth transition for background */
 }
@@ -39,7 +39,7 @@ body {
 }
 
 .button-51:before {
-  background-color: #f7645d;
+  background-color: #f8a571;
   content: "";
   height: calc(100% + 3px);
   position: absolute;
@@ -51,7 +51,7 @@ body {
 }
 
 .button-51:hover:before {
-  background-color: #f87307;
+  background-color: #f94b20dd;
 }
 
 .button-52 {
@@ -67,8 +67,8 @@ body {
   position: relative;
   background: linear-gradient(to right, #FFA500, #FF4500); /* Initial gradient Fluorescent Orange */
   box-shadow: 0px 5px 5px rgba(255, 69, 0, 0.3); /* Semi-circle outer shadow */
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
   touch-action: manipulation;
   color: #FFFFFF; /* White text color */
   animation: colorTransition 10s linear infinite; /* Continuous smooth transition */
