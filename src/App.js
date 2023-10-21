@@ -921,23 +921,70 @@ function App() {
 	const PATH_FINDER_API_URL = "https://api.pf.testnet.routerprotocol.com/api"
 	
 	
-	useEffect(async()=>{
-		const params ={
+	useEffect(() => {
+		async function fetchData() {
+		  const params = {
 			'fromTokenAddress': fromtoken,
 			'toTokenAddress': totoken,
 			'amount': amount,
 			'fromTokenChainId': fromchain,
-			'toTokenChainId': tochain, // Fuji
-	
-			'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
+			'toTokenChainId': tochain,
+			'widgetId': 0,
+		  }
+		  const quoteData = await getQuote(params);
+		  setQuoteData(quoteData);
 		}
-		const quoteData = await getQuote(params);
-		setQuoteData(quoteData)
-	},[fromchain,tochain,fromtoken,totoken,amount])
-	
-	useEffect(()=>{
-
-	})
+		
+		fetchData();
+	  }, [fromchain, tochain, fromtoken, totoken, amount]);
+	  
+	  useEffect(() => {
+		async function handleEthereum() {
+		  if (window.ethereum) {
+			console.log('detected');
+		
+			try {
+			  const accounts = await window.ethereum.request({
+				method: "eth_requestAccounts",
+			  });
+			  console.log(accounts[0]);
+			  const provider = new ethers.providers.Web3Provider(window.ethereum);
+			  const signer = provider.getSigner();
+	  
+			  await checkAndSetAllowance(
+				signer,
+				fromtoken,
+				quoteData.allowanceTo,
+				ethers.constants.MaxUint256
+			  );
+			  setStep2('✅');
+			} catch (err) {
+			  console.log(err);
+			} finally {
+			  const txResponse = await getTransaction({
+				'fromTokenAddress': fromtoken,
+				'toTokenAddress': totoken,
+				'fromTokenChainId': fromchain,
+				'toTokenChainId': tochain,
+				'widgetId': 0,
+			  }, quoteData);
+	  
+			  const tx = await signer.sendTransaction(txResponse.txn.execution);
+			  try {
+				await tx.wait();
+				console.log(`Transaction mined successfully: ${tx.hash}`);
+				alert(`Transaction mined successfully: ${tx.hash}`);
+				setStep3('✅');
+			  } catch (error) {
+				console.log(`Transaction failed with error: ${error}`);
+			  }
+			}
+		  }
+		}
+	  
+		handleEthereum();
+	  }, [quoteData]);
+	  
 	
 	const getQuote = async (params) => {
 		const endpoint = "v2/quote"
@@ -1075,11 +1122,11 @@ if(window.ethereum) {
 		<button  class="button-51" onClick={async ()=>{
 			
 			const params ={
-				'fromTokenAddress': from,
-				'toTokenAddress': to,
+				'fromTokenAddress': fromchain,
+				'toTokenAddress': tochain,
 				'amount': amount,
-				'fromTokenChainId': "80001",
-				'toTokenChainId': "43113", // Fuji
+				'fromTokenChainId': fromtoken,
+				'toTokenChainId': totoken, // Fuji
 		
 				'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
 			}
@@ -1112,32 +1159,32 @@ if(window.ethereum) {
 		
 	
 		// ❌ Check if Meta Mask Extension exists 
-		if(window.ethereum) {
-		  console.log('detected');
+		// if(window.ethereum) {
+		//   console.log('detected');
 	
-		  try {
-			const accounts = await window.ethereum.request({
-			  method: "eth_requestAccounts",
-			});
+		//   try {
+		// 	const accounts = await window.ethereum.request({
+		// 	  method: "eth_requestAccounts",
+		// 	});
 
-			console.log(accounts[0])
-			const provider = new ethers.providers.Web3Provider(window.ethereum);
-			const signer = provider.getSigner();
+		// 	console.log(accounts[0])
+		// 	const provider = new ethers.providers.Web3Provider(window.ethereum);
+		// 	const signer = provider.getSigner();
 
 			
 
-			await checkAndSetAllowance(
-				signer,
-				fromtoken, // fromTokenAddress (USDT on Mumbai)
-				quoteData.allowanceTo, // quote.allowanceTo in getQuote(params) response from step 1
-				ethers.constants.MaxUint256 // amount to approve (infinite approval)
-			);
-			setStep2('✅')
-		  }
-		  catch(err) {
-			console.log(err)
-		  }
-		}
+		// 	await checkAndSetAllowance(
+		// 		signer,
+		// 		fromtoken, // fromTokenAddress (USDT on Mumbai)
+		// 		quoteData.allowanceTo, // quote.allowanceTo in getQuote(params) response from step 1
+		// 		ethers.constants.MaxUint256 // amount to approve (infinite approval)
+		// 	);
+		// 	setStep2('✅')
+		//   }
+		//   catch(err) {
+		// 	console.log(err)
+		//   }
+		// }
 	}
 }>Step 2: Check Allowance {step2}</button>
 <br></br>
@@ -1147,41 +1194,41 @@ if(window.ethereum) {
 	if(window.ethereum) {
 		console.log('detected');
   
-		try {
-		  const accounts = await window.ethereum.request({
-			method: "eth_requestAccounts",
-		  });
+		// try {
+		//   const accounts = await window.ethereum.request({
+		// 	method: "eth_requestAccounts",
+		//   });
 
-		  console.log(accounts[0])
-		  const provider = new ethers.providers.Web3Provider(window.ethereum);
-		  const signer = provider.getSigner();
+		//   console.log(accounts[0])
+		//   const provider = new ethers.providers.Web3Provider(window.ethereum);
+		//   const signer = provider.getSigner();
 
 		  
 
-		  const txResponse = await getTransaction({
-			'fromTokenAddress': fromtoken,
-			'toTokenAddress': totoken,
-			'fromTokenChainId': fromchain,
-			'toTokenChainId': tochain, // Fuji
+		//   const txResponse = await getTransaction({
+		// 	'fromTokenAddress': fromtoken,
+		// 	'toTokenAddress': totoken,
+		// 	'fromTokenChainId': fromchain,
+		// 	'toTokenChainId': tochain, // Fuji
 	
-			'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
-		}, quoteData); // params have been defined in step 1 and quoteData has also been fetched in step 1
+		// 	'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
+		// }, quoteData); // params have been defined in step 1 and quoteData has also been fetched in step 1
 	
-		// sending the transaction using the data given by the pathfinder
-		const tx = await signer.sendTransaction(txResponse.txn.execution)
-		try {
-			await tx.wait();
-			console.log(`Transaction mined successfully: ${tx.hash}`)
-			alert(`Transaction mined successfully: ${tx.hash}`)
-			setStep3('✅')
-		}
-		catch (error) {
-			console.log(`Transaction failed with error: ${error}`)
-		}
-		}
-		catch(err) {
-		  console.log(err)
-		}
+		// // sending the transaction using the data given by the pathfinder
+		// const tx = await signer.sendTransaction(txResponse.txn.execution)
+		// try {
+		// 	await tx.wait();
+		// 	console.log(`Transaction mined successfully: ${tx.hash}`)
+		// 	alert(`Transaction mined successfully: ${tx.hash}`)
+		// 	setStep3('✅')
+		// }
+		// catch (error) {
+		// 	console.log(`Transaction failed with error: ${error}`)
+		// }
+		// }
+		// catch(err) {
+		//   console.log(err)
+		// }
 	  }
     
   
