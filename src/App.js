@@ -6,264 +6,6 @@ import OpenAI from 'openai';
 import './App.css'
 
 function App() {
-	const [chatmessage, setChatMessage] = useState([]);
-	const [userMessage, setUserMessage] = useState('');
-  	const [loading, setLoading] = useState(false);
-	const [response, setResponse] = useState(null);
-
-	const [fromchain, setFromChain]=useState('80001')
-	const [tochain,setToChain]=useState('4331')
-	const [fromtoken,setFromToken]=useState('0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054')
-	const [totoken, setToToken]=useState('0xb452b513552aa0B57c4b1C9372eFEa78024e5936')
-	const [amount,setAmount]=useState(0)
-	
-	// const fromtoken= "80001"	
-	// const totoken="4331"
-	// const from="0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054";
-	// const to="0xb452b513552aa0B57c4b1C9372eFEa78024e5936";
-
-
-	const handleUserMessageChange = (e) => {
-		setUserMessage(e.target.value);
-	  };
-	
-	  const handleSendMessage = () => {
-		if (userMessage) {
-		  const message1 = [
-			{ role: 'system', content: 'Only use the function I provide' },
-			{ role: 'user', content: `${userMessage}` },
-		  ];
-	
-		  setChatMessage(message1);
-		  console.log(chatmessage)
-		}
-
-	
-		  
-	  };
-
-
-	  useEffect(() => {
-		if (chatmessage.length > 0) {
-		  setLoading(true);
-		  fetch_data()
-			.then((response) => {
-			  setResponse(response);
-			})
-			.catch((error) => {
-			  console.error(error);
-			})
-			.finally(() => {
-			  setLoading(false);
-			});
-		}
-	  }, [chatmessage]);
-
-	  const fetch_data = async () => {
-		console.log("im in")
-		try {
-		  const response = await openai.chat.completions.create({
-			model: 'gpt-3.5-turbo-0613',
-			messages: chatmessage,
-			functions: functions1,
-			function_call: 'auto',
-		  });
-	
-		  console.log(response)
-		  setLoading(false)
-		  return response;
-		} catch (error) {
-		  console.error(error);
-		  throw error;
-		}
-	  };
-
-	//   "{
-	// 	"sourcechain": "Polygon Mumbai",
-	// 	"destinationchain": "Avalanche Fuji",
-	// 	"sourcetoken": "ETH",
-	// 	"destinationtoken": "USDT",
-	// 	"amount": 5
-	//   }"
-
-	  useEffect(()=>{
-
-		if(response!=null){
-		const finalresp = JSON.parse(response.choices[0].message.function_call.arguments)
-
-		  const amount = finalresp.amount
-		  // Assuming you have defined the 'chains' and 'tokens' objects elsewhere in your code.
-		  const sourcechainname=finalresp.sourcechain
-		  const destinationchainname=finalresp.destinationchain
-
-		  const sourcechain = chains[finalresp.sourcechain];
-
-		  console.log(sourcechain)
-		  const destinationchain = chains[finalresp.destinationchain];
-		  console.log(destinationchain)
-		  const stoken = finalresp.sourcetoken;
-		  const dtoken = finalresp.destinationtoken;
-		  
-		//   const sourcetoken = tokens[sourcechain];
-		//   console.log("stoken",sourcetoken)
-		//   const destinationtoken = tokens[destinationchain];
-		//   console.log("dtoken", destinationtoken)
-		
-		console.log(sourcechainname)
-		console.log(destinationchainname)
-
-		console.log(tokens[sourcechainname][stoken])
-		console.log(tokens[destinationchainname][dtoken])
-
-		console.log("resp",finalresp)
-		console.log("sourcechain",sourcechain)
-		console.log("destinationchain", destinationchain)
-		setFromChain(sourcechain)
-		setToChain(destinationchain)
-		setFromToken(stoken)
-		setToToken(dtoken)
-		setAmount(amount)
-
-		// console.log("stoken",sourcetoken)
-		// console.log("dtoken", destinationtoken)
-	}
-	  }, [response])
-	 
-	const chains= {
-		"Avalanche Fuji": 43113,
-		"Polygon Mumbai": 80001,
-		"Ethereum Goerli": 5,
-	  }
-	
-	  const tokens = {
-		"Avalanche Fuji": {
-		  "USDT": "0xb452b513552aa0B57c4b1C9372eFEa78024e5936",
-		  "ETH": "0xce811501ae59c3E3e539D5B4234dD606E71A312e",
-		  "ROUTE": "0x0b903E66b3A54f0F7DaE605418D14f0339560D76",
-		  "USDC": "0x5425890298aed601595a70ab815c96711a31bc65",
-		  "PEPE": "0x669365a664E41c3c3f245779f98118CF23a20789",
-		  "PIKAMON": "0x00A7318DE94e698c3683db8f78dE881de4E5d18C",
-		  "SHIBA INU": "0xB94EC038E5cF4739bE757dF3cBd2e1De897fCA2e"
-		},
-		"Polygon Mumbai": {
-		  "USDT": "0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054",
-		  "ETH": "0x3C6Bb231079c1023544265f8F26505bc5955C3df",
-		  "ROUTE": "0x908aC4f83A93f3B7145f24f906327018c9e54B3a",
-		  "PEPE": "0xFee7De539Dd346189A33E954c8A140df95F94B89",
-		  "PIKAMON": "0xa78044353cB8C675E905Ce7339769872Edd8E637",
-		  "SHIBA INU": "0x418049cA499E9B5B983c9141c341E1aA489d6E4d"
-		},
-		"Ethereum Goerli": {
-		  "USDT": "0x2227E4764be4c858E534405019488D9E5890Ff9E",
-		  "ETH": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
-		  "ROUTE": "0x8725bfdCB8896d86AA0a6342A7e83c1565f62889",
-		  "PEPE": "0x9bAA6b58bc1fAB3619f1387F27dCC18CbA5A9ca1",
-		  "PIKAMON": "0x7085f7c56Ef19043874CA3F2eA781CDa788be5E4",
-		  "SHIBA INU": "0xDC17183328e81b5c619D58F6B7E480AB1c2EA152",
-		  "USDC": "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
-		}
-	  }
-	  
-
-	const openai = new OpenAI({
-		apiKey: '',
-		dangerouslyAllowBrowser: true,
-		maxRetries: 0,
-	  });
-
-	  const functions1=[
-		{
-			name: "swap_router",
-			description: ` Swap currency using Router `,
-			parameters: {
-			  type: "object",
-			  properties: {
-				sourcechain:{
-					type: "string",
-					description: "source chain name eg.Avalanche Fuji,Polygon Mumbai,Ethereum Goerli"
-				},
-				destinationchain: {
-					type: "string",
-					description: "destination chain name eg.Avalanche Fuji,Polygon Mumbai,Ethereum Goerli"
-				},
-				sourcetoken: {
-					type: "string",
-					description: "token name eg. USDT, ETH"
-				},
-				destinationtoken: {
-					type: "string",
-					description: "token name eg. USDT. Default is USDT" 
-				},
-				amount: {
-					type: "number",
-					description: "amount eg. 100 or 1000"
-				}
-
-			  },
-			  required: ["sourcechain",'destinationchain','sourcetoken','destinationtoken','amount'],
-			},
-		  },
-	]
-
-
-
-	 
-	// useEffect(async ()=>{
-
-	// 	if(window.ethereum) {
-	// 		console.log('detected');
-		
-	// 		try {
-	// 		  const accounts = await window.ethereum.request({
-	// 			method: "eth_requestAccounts",
-	// 		  });
-	// 		  setAccount(accounts[0])
-	// 		  console.log(accounts[0])
-	// 		  const provider = new ethers.providers.Web3Provider(window.ethereum);
-	// 		  const provider1 = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/polygon_mumbai", 80001);
-	// 		  const provider2 = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/avalanche_fuji", 43113);
-	// 		  const signer = provider.getSigner();
-		
-			  
-		
-			  
-		
-	// 		  const contract = new ethers.Contract(
-	// 			  from,
-	// 			  erc20_abi,
-	// 			  provider1
-	// 		  );
-			  
-		
-	// 		  let balance = await contract.balanceOf(accounts[0])
-		
-	// 		  console.log(ethers.utils.formatEther(balance)*Math.pow(10,6));
-	// 		  setPolygonBalance(ethers.utils.formatEther(balance)*Math.pow(10,6))
-	// 		  const contract2 = new ethers.Contract(
-	// 			to,
-	// 			erc20_abi,
-	// 			provider2
-	// 		);
-	// 		balance = await contract2.balanceOf(accounts[0])
-	// 		  console.log(ethers.utils.formatEther(balance)*Math.pow(10,12));
-	// 		  setAvalancheBalance(ethers.utils.formatEther(balance)*Math.pow(10,12))
-		
-	// 		}
-	// 		catch(err) {
-	// 		  console.log(err)
-	// 		}
-	// 	  }
-		
-	// 			},[])
-
-	 
-	const [quoteData,setQuoteData]=useState('')
-	const [polygonBalance,setPolygonBalance]=useState(0)
-	const [avalancheBalance,setAvalancheBalance]=useState(0)
-	const [account,setAccount]=useState('Connect Wallet')
-	const [step1,setStep1]=useState('')
-	const [step2,setStep2]=useState('')
-	const [step3,setStep3]=useState('')
 	const erc20_abi = [
 		{
 			"inputs": [
@@ -918,6 +660,212 @@ function App() {
 			"type": "function"
 		}
 	];
+
+	const [chatmessage, setChatMessage] = useState([]);
+	const [userMessage, setUserMessage] = useState('');
+  	const [loading, setLoading] = useState(false);
+	const [response, setResponse] = useState(null);
+
+	const [fromchain, setFromChain]=useState('80001')
+	const [tochain,setToChain]=useState('43113')
+	const [fromtoken,setFromToken]=useState('0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054')
+	const [totoken, setToToken]=useState('0xb452b513552aa0B57c4b1C9372eFEa78024e5936')
+	const [amount,setAmount]=useState(0)
+	
+	// const fromtoken= "80001"	
+	// const totoken="4331"
+	// const from="0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054";
+	// const to="0xb452b513552aa0B57c4b1C9372eFEa78024e5936";
+
+
+	const handleUserMessageChange = (e) => {
+		setUserMessage(e.target.value);
+	  };
+	
+	  const handleSendMessage = () => {
+		if (userMessage) {
+		  const message1 = [
+			{ role: 'system', content: 'Only use the function I provide' },
+			{ role: 'user', content: `${userMessage}` },
+		  ];
+	
+		  setChatMessage(message1);
+		  console.log(chatmessage)
+		}
+
+	
+		  
+	  };
+
+
+	  useEffect(() => {
+		if (chatmessage.length > 0) {
+		  setLoading(true);
+		  fetch_data()
+			.then((response) => {
+			  setResponse(response);
+			})
+			.catch((error) => {
+			  console.error(error);
+			})
+			.finally(() => {
+			  setLoading(false);
+			});
+		}
+	  }, [chatmessage]);
+
+	  const fetch_data = async () => {
+		console.log("im in")
+		try {
+		  const response = await openai.chat.completions.create({
+			model: 'gpt-3.5-turbo-0613',
+			messages: chatmessage,
+			functions: functions1,
+			function_call: 'auto',
+		  });
+	
+		  console.log(response)
+		  setLoading(false)
+		  return response;
+		} catch (error) {
+		  console.error(error);
+		  throw error;
+		}
+	  };
+
+
+	  useEffect(()=>{
+
+		if(response!=null){
+		const finalresp = JSON.parse(response.choices[0].message.function_call.arguments)
+
+		  const amount = finalresp.amount*Math.pow(10,12)
+		  // Assuming you have defined the 'chains' and 'tokens' objects elsewhere in your code.
+		  const sourcechainname=finalresp.sourcechain
+		  const destinationchainname=finalresp.destinationchain
+
+		  const sourcechain = chains[finalresp.sourcechain];
+
+		  console.log(sourcechain)
+		  const destinationchain = chains[finalresp.destinationchain];
+		  console.log(destinationchain)
+		  const stoken = finalresp.sourcetoken || 'ETH';
+		  const dtoken = finalresp.destinationtoken || 'ETH';
+		  
+		//   const sourcetoken = tokens[sourcechain];
+		//   console.log("stoken",sourcetoken)
+		//   const destinationtoken = tokens[destinationchain];
+		//   console.log("dtoken", destinationtoken)
+		
+		console.log(sourcechainname)
+		console.log(destinationchainname)
+
+		console.log("sourchain name", sourcechainname)
+		console.log("destination chain name", destinationchainname)
+
+		console.log(tokens[sourcechainname][stoken])
+		console.log(tokens[destinationchainname][dtoken])
+
+		console.log("resp",finalresp)
+		console.log("sourcechain",sourcechain)
+		console.log("destinationchain", destinationchain)
+		setFromChain(sourcechain)
+		setToChain(destinationchain)
+		setFromToken(tokens[sourcechainname][stoken])
+		setToToken(tokens[destinationchainname][dtoken])
+		setAmount(amount)
+
+		// console.log("stoken",sourcetoken)
+		// console.log("dtoken", destinationtoken)
+	}
+	  }, [response])
+	 
+	const chains= {
+		"Avalanche Fuji": 43113,
+		"Polygon Mumbai": 80001,
+		"Ethereum Goerli": 5,
+	  }
+	
+	  const tokens = {
+		"Avalanche Fuji": {
+		  "USDT": "0xb452b513552aa0B57c4b1C9372eFEa78024e5936",
+		  "ETH": "0xce811501ae59c3E3e539D5B4234dD606E71A312e",
+		  "ROUTE": "0x0b903E66b3A54f0F7DaE605418D14f0339560D76",
+		  "USDC": "0x5425890298aed601595a70ab815c96711a31bc65",
+		  "PEPE": "0x669365a664E41c3c3f245779f98118CF23a20789",
+		  "PIKAMON": "0x00A7318DE94e698c3683db8f78dE881de4E5d18C",
+		  "SHIBA INU": "0xB94EC038E5cF4739bE757dF3cBd2e1De897fCA2e"
+		},
+		"Polygon Mumbai": {
+		  "USDT": "0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054",
+		  "ETH": "0x3C6Bb231079c1023544265f8F26505bc5955C3df",
+		  "ROUTE": "0x908aC4f83A93f3B7145f24f906327018c9e54B3a",
+		  "PEPE": "0xFee7De539Dd346189A33E954c8A140df95F94B89",
+		  "PIKAMON": "0xa78044353cB8C675E905Ce7339769872Edd8E637",
+		  "SHIBA INU": "0x418049cA499E9B5B983c9141c341E1aA489d6E4d"
+		},
+		"Ethereum Goerli": {
+		  "USDT": "0x2227E4764be4c858E534405019488D9E5890Ff9E",
+		  "ETH": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
+		  "ROUTE": "0x8725bfdCB8896d86AA0a6342A7e83c1565f62889",
+		  "PEPE": "0x9bAA6b58bc1fAB3619f1387F27dCC18CbA5A9ca1",
+		  "PIKAMON": "0x7085f7c56Ef19043874CA3F2eA781CDa788be5E4",
+		  "SHIBA INU": "0xDC17183328e81b5c619D58F6B7E480AB1c2EA152",
+		  "USDC": "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
+		}
+	  }
+	  
+
+	const openai = new OpenAI({
+		apiKey: '',
+		dangerouslyAllowBrowser: true,
+		maxRetries: 0,
+	  });
+
+	  const functions1=[
+		{
+			name: "swap_router",
+			description: ` Swap currency using Router `,
+			parameters: {
+			  type: "object",
+			  properties: {
+				sourcechain:{
+					type: "string",
+					description: "source chain name, choose the most similar and return one (Avalanche Fuji or Polygon Mumbai or Ethereum Goerli)"
+				},
+				destinationchain: {
+					type: "string",
+					description: "destination chain name, choose the most similar and one either (Avalanche Fuji or Polygon Mumbai or Ethereum Goerli)"
+				},
+				sourcetoken: {
+					type: "string",
+					description: "from which token that name, remember to follow the format and instructions eg. USDT, ETH"
+				},
+				destinationtoken: {
+					type: "string",
+					description: "return ETH by default if no inputs or you dont understand anything else the token to which swapping happens, give that code eg. ETH, USDT " 
+				},
+				amount: {
+					type: "number",
+					description: "amount eg. 100 or 1000"
+				}
+
+			  },
+			  required: ["sourcechain",'destinationchain','sourcetoken','destinationtoken','amount'],
+			},
+		  },
+	]
+
+
+	 
+	const [quoteData,setQuoteData]=useState('')
+	const [polygonBalance,setPolygonBalance]=useState(0)
+	const [avalancheBalance,setAvalancheBalance]=useState(0)
+	const [account,setAccount]=useState('Connect Wallet')
+	const [step1,setStep1]=useState('')
+	const [step2,setStep2]=useState('')
+	const [step3,setStep3]=useState('')
+	
 	const PATH_FINDER_API_URL = "https://api.pf.testnet.routerprotocol.com/api"
 	
 	
@@ -931,10 +879,11 @@ function App() {
 			'toTokenChainId': tochain,
 			'widgetId': 0,
 		  }
+		  console.log(params)
 		  const quoteData = await getQuote(params);
 		  setQuoteData(quoteData);
 		}
-		
+		console.log("done quoteData")
 		fetchData();
 	  }, [fromchain, tochain, fromtoken, totoken, amount]);
 	  
@@ -942,14 +891,14 @@ function App() {
 		async function handleEthereum() {
 		  if (window.ethereum) {
 			console.log('detected');
-		
+			const provider = new ethers.providers.Web3Provider(window.ethereum);
+			const signer = provider.getSigner();
 			try {
+				console.log("doing allowance")
 			  const accounts = await window.ethereum.request({
 				method: "eth_requestAccounts",
 			  });
 			  console.log(accounts[0]);
-			  const provider = new ethers.providers.Web3Provider(window.ethereum);
-			  const signer = provider.getSigner();
 	  
 			  await checkAndSetAllowance(
 				signer,
@@ -957,10 +906,12 @@ function App() {
 				quoteData.allowanceTo,
 				ethers.constants.MaxUint256
 			  );
+			  console.log("done allowance")
 			  setStep2('✅');
 			} catch (err) {
 			  console.log(err);
 			} finally {
+				console.log("entering transaction")
 			  const txResponse = await getTransaction({
 				'fromTokenAddress': fromtoken,
 				'toTokenAddress': totoken,
@@ -968,7 +919,7 @@ function App() {
 				'toTokenChainId': tochain,
 				'widgetId': 0,
 			  }, quoteData);
-	  
+			//   console.log("done tx",txResponse) ? txResponse!=null : console.log("wait tx")
 			  const tx = await signer.sendTransaction(txResponse.txn.execution);
 			  try {
 				await tx.wait();
@@ -1070,7 +1021,7 @@ if(window.ethereum) {
 	  const provider = new ethers.providers.Web3Provider(window.ethereum);
 	  const provider1 = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/polygon_mumbai", 80001);
 	  const provider2 = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/avalanche_fuji", 43113);
-	  const signer = provider.getSigner();
+	//   const signer = provider.getSigner();
 
 	  
 
@@ -1143,48 +1094,6 @@ if(window.ethereum) {
 			<button class="button-51" onClick={async () => {
 
 
-	// setting up a signer
-	// const provider = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/polygon_mumbai", 80001);
-	// // use provider.getSigner() method to get a signer if you're using this for a UI
-
-
-	
-	// const wallet = new ethers.Wallet("7de83cb8af577175dd83cfcaa59d8803189c0f95a0f7b8ba239bd7b641de3761", provider)
-	
-
-
-	// }
-
-	 
-		
-	
-		// ❌ Check if Meta Mask Extension exists 
-		// if(window.ethereum) {
-		//   console.log('detected');
-	
-		//   try {
-		// 	const accounts = await window.ethereum.request({
-		// 	  method: "eth_requestAccounts",
-		// 	});
-
-		// 	console.log(accounts[0])
-		// 	const provider = new ethers.providers.Web3Provider(window.ethereum);
-		// 	const signer = provider.getSigner();
-
-			
-
-		// 	await checkAndSetAllowance(
-		// 		signer,
-		// 		fromtoken, // fromTokenAddress (USDT on Mumbai)
-		// 		quoteData.allowanceTo, // quote.allowanceTo in getQuote(params) response from step 1
-		// 		ethers.constants.MaxUint256 // amount to approve (infinite approval)
-		// 	);
-		// 	setStep2('✅')
-		//   }
-		//   catch(err) {
-		// 	console.log(err)
-		//   }
-		// }
 	}
 }>Step 2: Check Allowance {step2}</button>
 <br></br>
@@ -1194,41 +1103,7 @@ if(window.ethereum) {
 	if(window.ethereum) {
 		console.log('detected');
   
-		// try {
-		//   const accounts = await window.ethereum.request({
-		// 	method: "eth_requestAccounts",
-		//   });
-
-		//   console.log(accounts[0])
-		//   const provider = new ethers.providers.Web3Provider(window.ethereum);
-		//   const signer = provider.getSigner();
-
-		  
-
-		//   const txResponse = await getTransaction({
-		// 	'fromTokenAddress': fromtoken,
-		// 	'toTokenAddress': totoken,
-		// 	'fromTokenChainId': fromchain,
-		// 	'toTokenChainId': tochain, // Fuji
 	
-		// 	'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
-		// }, quoteData); // params have been defined in step 1 and quoteData has also been fetched in step 1
-	
-		// // sending the transaction using the data given by the pathfinder
-		// const tx = await signer.sendTransaction(txResponse.txn.execution)
-		// try {
-		// 	await tx.wait();
-		// 	console.log(`Transaction mined successfully: ${tx.hash}`)
-		// 	alert(`Transaction mined successfully: ${tx.hash}`)
-		// 	setStep3('✅')
-		// }
-		// catch (error) {
-		// 	console.log(`Transaction failed with error: ${error}`)
-		// }
-		// }
-		// catch(err) {
-		//   console.log(err)
-		// }
 	  }
     
   
