@@ -1,15 +1,27 @@
 import React,{useState,useEffect} from 'react'
 import axios from "axios"
 import { ethers } from 'ethers';
-import './App.css'
 import OpenAI from 'openai';
 
+import './App.css'
+
 function App() {
+	const [chatmessage, setChatMessage] = useState([]);
 	const [userMessage, setUserMessage] = useState('');
   	const [loading, setLoading] = useState(false);
-	  const [response, setResponse] = useState(null);
-	const fromtoken= "80001"	
-	const totoken="4331"
+	const [response, setResponse] = useState(null);
+
+	const [fromchain, setFromChain]=useState('80001')
+	const [tochain,setToChain]=useState('4331')
+	const [fromtoken,setFromToken]=useState('0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054')
+	const [totoken, setToToken]=useState('0xb452b513552aa0B57c4b1C9372eFEa78024e5936')
+	const [amount,setAmount]=useState(0)
+	
+	// const fromtoken= "80001"	
+	// const totoken="4331"
+	// const from="0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054";
+	// const to="0xb452b513552aa0B57c4b1C9372eFEa78024e5936";
+
 
 	const handleUserMessageChange = (e) => {
 		setUserMessage(e.target.value);
@@ -25,18 +37,136 @@ function App() {
 		  setChatMessage(message1);
 		  console.log(chatmessage)
 		}
+
 	
+		  
 	  };
+
+
+	  useEffect(() => {
+		if (chatmessage.length > 0) {
+		  setLoading(true);
+		  fetch_data()
+			.then((response) => {
+			  setResponse(response);
+			})
+			.catch((error) => {
+			  console.error(error);
+			})
+			.finally(() => {
+			  setLoading(false);
+			});
+		}
+	  }, [chatmessage]);
+
+	  const fetch_data = async () => {
+		console.log("im in")
+		try {
+		  const response = await openai.chat.completions.create({
+			model: 'gpt-3.5-turbo-0613',
+			messages: chatmessage,
+			functions: functions1,
+			function_call: 'auto',
+		  });
+	
+		  console.log(response)
+		  setLoading(false)
+		  return response;
+		} catch (error) {
+		  console.error(error);
+		  throw error;
+		}
+	  };
+
+	//   "{
+	// 	"sourcechain": "Polygon Mumbai",
+	// 	"destinationchain": "Avalanche Fuji",
+	// 	"sourcetoken": "ETH",
+	// 	"destinationtoken": "USDT",
+	// 	"amount": 5
+	//   }"
+
+	  useEffect(()=>{
+
+		if(response!=null){
+		const finalresp = JSON.parse(response.choices[0].message.function_call.arguments)
+
+		  const amount = finalresp.amount
+		  // Assuming you have defined the 'chains' and 'tokens' objects elsewhere in your code.
+		  const sourcechainname=finalresp.sourcechain
+		  const destinationchainname=finalresp.destinationchain
+
+		  const sourcechain = chains[finalresp.sourcechain];
+
+		  console.log(sourcechain)
+		  const destinationchain = chains[finalresp.destinationchain];
+		  console.log(destinationchain)
+		  const stoken = finalresp.sourcetoken;
+		  const dtoken = finalresp.destinationtoken;
+		  
+		//   const sourcetoken = tokens[sourcechain];
+		//   console.log("stoken",sourcetoken)
+		//   const destinationtoken = tokens[destinationchain];
+		//   console.log("dtoken", destinationtoken)
+		
+		console.log(sourcechainname)
+		console.log(destinationchainname)
+
+		console.log(tokens[sourcechainname][stoken])
+		console.log(tokens[destinationchainname][dtoken])
+
+		console.log("resp",finalresp)
+		console.log("sourcechain",sourcechain)
+		console.log("destinationchain", destinationchain)
+		setFromChain(sourcechain)
+		setToChain(destinationchain)
+		setFromToken(stoken)
+		setToToken(dtoken)
+		setAmount(amount)
+
+		// console.log("stoken",sourcetoken)
+		// console.log("dtoken", destinationtoken)
+	}
+	  }, [response])
 	 
 	const chains= {
 		"Avalanche Fuji": 43113,
 		"Polygon Mumbai": 80001,
 		"Ethereum Goerli": 5,
 	  }
+	
+	  const tokens = {
+		"Avalanche Fuji": {
+		  "USDT": "0xb452b513552aa0B57c4b1C9372eFEa78024e5936",
+		  "ETH": "0xce811501ae59c3E3e539D5B4234dD606E71A312e",
+		  "ROUTE": "0x0b903E66b3A54f0F7DaE605418D14f0339560D76",
+		  "USDC": "0x5425890298aed601595a70ab815c96711a31bc65",
+		  "PEPE": "0x669365a664E41c3c3f245779f98118CF23a20789",
+		  "PIKAMON": "0x00A7318DE94e698c3683db8f78dE881de4E5d18C",
+		  "SHIBA INU": "0xB94EC038E5cF4739bE757dF3cBd2e1De897fCA2e"
+		},
+		"Polygon Mumbai": {
+		  "USDT": "0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054",
+		  "ETH": "0x3C6Bb231079c1023544265f8F26505bc5955C3df",
+		  "ROUTE": "0x908aC4f83A93f3B7145f24f906327018c9e54B3a",
+		  "PEPE": "0xFee7De539Dd346189A33E954c8A140df95F94B89",
+		  "PIKAMON": "0xa78044353cB8C675E905Ce7339769872Edd8E637",
+		  "SHIBA INU": "0x418049cA499E9B5B983c9141c341E1aA489d6E4d"
+		},
+		"Ethereum Goerli": {
+		  "USDT": "0x2227E4764be4c858E534405019488D9E5890Ff9E",
+		  "ETH": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
+		  "ROUTE": "0x8725bfdCB8896d86AA0a6342A7e83c1565f62889",
+		  "PEPE": "0x9bAA6b58bc1fAB3619f1387F27dCC18CbA5A9ca1",
+		  "PIKAMON": "0x7085f7c56Ef19043874CA3F2eA781CDa788be5E4",
+		  "SHIBA INU": "0xDC17183328e81b5c619D58F6B7E480AB1c2EA152",
+		  "USDC": "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
+		}
+	  }
 	  
 
 	const openai = new OpenAI({
-		apiKey: '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',
+		apiKey: '',
 		dangerouslyAllowBrowser: true,
 		maxRetries: 0,
 	  });
@@ -62,7 +192,7 @@ function App() {
 				},
 				destinationtoken: {
 					type: "string",
-					description: "token name eg. USDT, ETH"
+					description: "token name eg. USDT. Default is USDT" 
 				},
 				amount: {
 					type: "number",
@@ -74,6 +204,10 @@ function App() {
 			},
 		  },
 	]
+
+
+
+	 
 	// useEffect(async ()=>{
 
 	// 	if(window.ethereum) {
@@ -121,10 +255,7 @@ function App() {
 	// 	  }
 		
 	// 			},[])
-	 const from="0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054";
-	// const from="0x9999f7fea5938fd3b1e26a12c3f2fb024e194f97"
-	 const to="0xb452b513552aa0B57c4b1C9372eFEa78024e5936";
-	const [amount,setAmount]=useState(0)
+
 	 
 	const [quoteData,setQuoteData]=useState('')
 	const [polygonBalance,setPolygonBalance]=useState(0)
@@ -133,7 +264,6 @@ function App() {
 	const [step1,setStep1]=useState('')
 	const [step2,setStep2]=useState('')
 	const [step3,setStep3]=useState('')
-	const [chatmessage, setChatMessage] = useState([]);
 	const erc20_abi = [
 		{
 			"inputs": [
@@ -789,6 +919,26 @@ function App() {
 		}
 	];
 	const PATH_FINDER_API_URL = "https://api.pf.testnet.routerprotocol.com/api"
+	
+	
+	useEffect(async()=>{
+		const params ={
+			'fromTokenAddress': fromtoken,
+			'toTokenAddress': totoken,
+			'amount': amount,
+			'fromTokenChainId': fromchain,
+			'toTokenChainId': tochain, // Fuji
+	
+			'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
+		}
+		const quoteData = await getQuote(params);
+		setQuoteData(quoteData)
+	},[fromchain,tochain,fromtoken,totoken,amount])
+	
+	useEffect(()=>{
+
+	})
+	
 	const getQuote = async (params) => {
 		const endpoint = "v2/quote"
 		const quoteUrl = `${PATH_FINDER_API_URL}/${endpoint}`
@@ -797,47 +947,13 @@ function App() {
 	
 		try {
 			const res = await axios.get(quoteUrl, { params })
+
 			return res.data;
+			
 		} catch (e) {
 			console.error(`Fetching quote data from pathfinder: ${e}`)
 		}    
 	}
-
-	useEffect(() => {
-		if (chatmessage.length > 0) {
-		  setLoading(true);
-		  fetch_data()
-			.then((response) => {
-			  setResponse(response);
-			})
-			.catch((error) => {
-			  console.error(error);
-			})
-			.finally(() => {
-			  setLoading(false);
-			});
-		}
-	  }, [chatmessage]);
-
-	  const fetch_data = async () => {
-		console.log("im in")
-		try {
-		  const response = await openai.chat.completions.create({
-			model: 'gpt-3.5-turbo-0613',
-			messages: chatmessage,
-			functions: functions1,
-			function_call: 'auto',
-		  });
-	
-		  console.log(response)
-		  setLoading(false)
-		  return response;
-		} catch (error) {
-		  console.error(error);
-		  throw error;
-		}
-	  };
-
 	const checkAndSetAllowance = async (wallet, tokenAddress, approvalAddress, amount) => {
 		// Transactions with the native token don't need approval
 		if (tokenAddress === ethers.constants.AddressZero) {
@@ -962,14 +1078,13 @@ if(window.ethereum) {
 				'fromTokenAddress': from,
 				'toTokenAddress': to,
 				'amount': amount,
-				'fromTokenChainId': fromtoken,
-				'toTokenChainId': totoken, // Fuji
+				'fromTokenChainId': "80001",
+				'toTokenChainId': "43113", // Fuji
 		
 				'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
 			}
 			
-			const quoteData = await getQuote(params);
-			setQuoteData(quoteData)
+
 			setStep1('✅')
 			alert(quoteData.allowanceTo)
 		
@@ -1013,7 +1128,7 @@ if(window.ethereum) {
 
 			await checkAndSetAllowance(
 				signer,
-				from, // fromTokenAddress (USDT on Mumbai)
+				fromtoken, // fromTokenAddress (USDT on Mumbai)
 				quoteData.allowanceTo, // quote.allowanceTo in getQuote(params) response from step 1
 				ethers.constants.MaxUint256 // amount to approve (infinite approval)
 			);
@@ -1044,10 +1159,10 @@ if(window.ethereum) {
 		  
 
 		  const txResponse = await getTransaction({
-			'fromTokenAddress': from,
-			'toTokenAddress': to,
-			'fromTokenChainId': fromtoken,
-			'toTokenChainId': totoken, // Fuji
+			'fromTokenAddress': fromtoken,
+			'toTokenAddress': totoken,
+			'fromTokenChainId': fromchain,
+			'toTokenChainId': tochain, // Fuji
 	
 			'widgetId': 0, // get your unique wdiget id by contacting us on Telegram
 		}, quoteData); // params have been defined in step 1 and quoteData has also been fetched in step 1
@@ -1076,7 +1191,7 @@ if(window.ethereum) {
 }}>Step 3: Execute {step3}</button>
 </center>
 
-<div style={{ padding: '1rem' }}>
+<div style={{ padding: '1rem', }}>
   <input
     type="text"
     placeholder="Type your message..."
@@ -1102,6 +1217,7 @@ if(window.ethereum) {
       borderRadius: '0.5rem',
       width: '100%',
       outline: 'none',
+	  marginTop: '2rem'
     }}
   >
     Send
@@ -1109,7 +1225,6 @@ if(window.ethereum) {
 </div>
 
 	</div>
-
   )
 }
 
