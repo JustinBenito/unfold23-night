@@ -8,7 +8,11 @@ body {
 
 .navbar {
   display: flex;
-  justify-content: center;
+
+  justify-content:space-between;
+  margin-left: 20%;
+  margin-right: 20%;
+  margin-top: 1%;
 }
 
 .button-51 {
@@ -59,14 +63,14 @@ body {
   font-weight: 200;
   letter-spacing: 1px;
   width: 100px; /* Increase the size */
-  height: 100px; /* Increase the size */
-  border-radius: 50%; /* Circular shape */
+  height: 100%;
+  padding: 10px; /* Increase the size */
+  border-radius: 5%; /* Circular shape */
   outline: 0;
   border: none; /* Remove the border */
   cursor: pointer;
   position: relative;
-  background: linear-gradient(to right, #FFA500, #FF4500); /* Initial gradient Fluorescent Orange */
-  box-shadow: 0px 5px 5px rgba(255, 69, 0, 0.3); /* Semi-circle outer shadow */
+  background: linear-gradient(to right, #FFA500, #FF4500); /* Initial gradient Fluorescent Orange */ /* Semi-circle outer shadow */
   -webkit-user-select: none;
   user-select: none;
   touch-action: manipulation;

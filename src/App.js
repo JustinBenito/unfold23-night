@@ -671,6 +671,15 @@ function App() {
 	const [fromtoken,setFromToken]=useState('0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054')
 	const [totoken, setToToken]=useState('0xb452b513552aa0B57c4b1C9372eFEa78024e5936')
 	const [amount,setAmount]=useState(0)
+
+	const decimalMap = {
+		"80001": {
+			"0x22bAA8b6cdd31a0C5D1035d6e72043f4Ce6aF054": "12"
+		},
+		"43113": {
+			"0xb452b513552aa0B57c4b1C9372eFEa78024e5936": "6"
+		},
+	}
 	
 	// const fromtoken= "80001"	
 	// const totoken="4331"
@@ -729,7 +738,7 @@ function App() {
 	  useEffect(() => {
 		if (response !== null) {
 		  const finalresp = JSON.parse(response.choices[0].message.function_call.arguments);
-		  const amount = finalresp.amount * Math.pow(10, 12);
+		  const amount = finalresp.amount ;
 		  const sourcechainname = finalresp.sourcechain;
 		  const destinationchainname = finalresp.destinationchain;
 		  const sourcechain = chains[sourcechainname];
@@ -742,6 +751,12 @@ function App() {
 		  setFromToken(tokens[sourcechainname][stoken]);
 		  setToToken(tokens[destinationchainname][dtoken]);
 		  setAmount(amount);
+
+		  console.log("sourcechain", sourcechain)
+		  console.log("destinationchain", destinationchain)
+		  console.log("tokenfrom",tokens[sourcechainname][stoken])
+		  console.log("tokento",tokens[destinationchainname][dtoken])
+		  console.log(amount)
 		}
 	  }, [response]);
 	
@@ -831,25 +846,36 @@ function App() {
 	const [step2,setStep2]=useState('')
 	const [step3,setStep3]=useState('')
 	
+
 	const PATH_FINDER_API_URL = 'https://api.pf.testnet.routerprotocol.com/api';
 
 	useEffect(() => {
 	  async function fetchData() {
+
+		let amountWithDecimals=0
+		if(amount!=0){
+			amountWithDecimals = amount * 10 ** decimalMap[fromchain][fromtoken];
+		}
+
 		const params = {
 		  fromTokenAddress: fromtoken,
 		  toTokenAddress: totoken,
-		  amount: amount,
+		  amount: amountWithDecimals,
 		  fromTokenChainId: fromchain,
 		  toTokenChainId: tochain,
 		  widgetId: 0,
 		};
+
+		console.log("params: ", params);
   
 		const quoteData = await getQuote(params);
+		console.log(quoteData)
 		setQuoteData(quoteData);
 	  }
   
-	  fetchData();
-	}, [fromchain, tochain, fromtoken, totoken, amount]);
+	  fetchData();}
+	, [fromchain, tochain, fromtoken, totoken, amount]);
+
   
 	useEffect(() => {
 	  async function handleEthereum() {
@@ -879,6 +905,49 @@ function App() {
   
 	  handleEthereum();
 	}, []);
+
+	useEffect(()=>{
+
+
+	async function checkandsee(){
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		const signer = provider.getSigner();
+		if (quoteData!=null){
+			await checkAndSetAllowance(signer, fromtoken,quoteData.allowanceTo,ethers.constants.MaxUint256)
+		}
+		let amountWithDecimals=0
+		if(amount!=0){
+			amountWithDecimals = amount * 10 ** decimalMap[fromchain][fromtoken];
+		}
+
+		const params = {
+			fromTokenAddress: fromtoken,
+			toTokenAddress: totoken,
+			amount: amountWithDecimals,
+			fromTokenChainId: fromchain,
+			toTokenChainId: tochain,
+			widgetId: 0,
+			};
+
+
+		console.log("Check Allowance done")
+		const Txresponse = await getTransaction(params, quoteData)
+		console.log(Txresponse);
+		const tx = await signer.sendTransaction(Txresponse.txn.execution)
+			await tx.wait()
+			console.log("completed the transaction", tx.hash)
+			alert("completed")
+		
+
+	}
+	  if (quoteData) {
+    checkandsee();
+  }
+}
+	,[quoteData])
+
+	
+	
   
 	const getQuote = async (params) => {
 	  const endpoint = 'v2/quote';
@@ -956,7 +1025,7 @@ if(window.ethereum) {
 	  setAccount(accounts[0])
 	
 	  console.log(accounts[0])
-	  const provider = new ethers.providers.Web3Provider(window.ethereum);
+	  
 	  const provider1 = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/polygon_mumbai", 80001);
 	  const provider2 = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/avalanche_fuji", 43113);
 	//   const signer = provider.getSigner();
