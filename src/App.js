@@ -946,6 +946,28 @@ function App() {
 }
 	,[quoteData])
 
+	const [transcript, setTranscript] = useState('');
+	const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+	const recognition = new SpeechRecognition();
+  
+	recognition.onstart = () => {
+	  console.log("We are listening. Try speaking into the microphone.");
+	};
+  
+	recognition.onspeechend = () => {
+	  recognition.stop();
+	};
+  
+	recognition.onresult = (event) => {
+	  const result = event.results[0][0];
+	  const recognizedText = result.transcript;
+	  setUserMessage(recognizedText);
+	  console.log(recognizedText)
+	};
+  
+	const startRecognition = () => {
+	  recognition.start();
+	};
 	
 	
   
@@ -1011,7 +1033,7 @@ function App() {
 <div class="navbar">
 	
 
-		<h1>Voyager Demo Dapp🚀</h1>
+		<h1>Blockxa D-AIApp 🤖</h1>
 		<button class="button-52" onClick={async ()=>{
 
 if(window.ethereum) {
@@ -1064,7 +1086,7 @@ if(window.ethereum) {
 		</div>
 		<br></br>
 		<br></br><br></br>
-		<h5>Transfer UDST from Polygon Mumbai to Avalanche Fuji</h5>
+		<h5>BE careful of what you wish for ...</h5>
 		<br></br>
 		
 		
@@ -1139,7 +1161,7 @@ if(window.ethereum) {
   <button
     onClick={handleSendMessage}
     style={{
-      backgroundColor: '#3490dc',
+      backgroundColor: 'orange',
       color: '#fff',
       fontWeight: 500,
       padding: '0.5rem 1rem',
@@ -1151,6 +1173,24 @@ if(window.ethereum) {
   >
     Send
   </button>
+
+  <br></br>
+
+  <button
+    onClick={startRecognition}
+    style={{
+      backgroundColor: 'orange',
+      color: '#fff',
+      fontWeight: 500,
+      padding: '0.5rem 1rem',
+      borderRadius: '0.5rem',
+      width: '100%',
+      outline: 'none',
+	  marginTop: '2rem'
+    }}
+  >
+    Let me hear your voice...
+  </button>
 </div>
 
 	</div>
@@ -1158,3 +1198,7 @@ if(window.ethereum) {
 }
 
 export default App
+
+
+
+

@@ -2,7 +2,10 @@
 body {
   background: #000000; /* Dark Black */
   color: #FFFFFF; /* White text color */
+  background-image: url('https://s.yimg.com/ny/api/res/1.2/SRedXv3Y74r0xYFrT5SHuQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTY3NjtoPTQ1MA--/https/media.zenfs.com/en-US/homerun/coin_rivet_596/af914adcdd377a5478c675bb9050c0de');
+ /* Adjust the opacity as needed (0.2 is 20%) */
 }
+
 
 /* Rest of your existing CSS for .navbar goes here */
 
